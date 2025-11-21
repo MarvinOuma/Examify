@@ -2,7 +2,20 @@ class AuthManager {
     constructor() {
         this.currentUser = localStorage.getItem('currentUser');
         this.users = JSON.parse(localStorage.getItem('users')) || {};
+        this.initAdmin();
         this.init();
+    }
+
+    initAdmin() {
+        // Create admin account if it doesn't exist
+        if (!this.users['admin']) {
+            this.users['admin'] = {
+                password: 'admin123',
+                exams: [],
+                isAdmin: true
+            };
+            localStorage.setItem('users', JSON.stringify(this.users));
+        }
     }
 
     init() {
@@ -47,6 +60,10 @@ class AuthManager {
 
         document.getElementById('saveSettingsBtn').addEventListener('click', () => {
             this.saveSettings();
+        });
+
+        document.getElementById('adminBtn').addEventListener('click', () => {
+            this.showAdmin();
         });
     }
 
@@ -181,10 +198,64 @@ class AuthManager {
         }
     }
 
+    showAdmin() {
+        this.renderUsersList();
+        new bootstrap.Modal(document.getElementById('adminModal')).show();
+    }
+
+    renderUsersList() {
+        const tbody = document.getElementById('usersList');
+        tbody.innerHTML = Object.keys(this.users)
+            .filter(username => username !== 'admin')
+            .map(username => {
+                const user = this.users[username];
+                const examCount = user.exams ? user.exams.length : 0;
+                return `
+                    <tr>
+                        <td>${username}</td>
+                        <td>${examCount}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-1" onclick="authManager.resetPassword('${username}')">
+                                <i class="bi bi-key"></i> Reset
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="authManager.deleteUser('${username}')">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+    }
+
+    resetPassword(username) {
+        if (confirm(`Reset password for ${username}?`)) {
+            const newPassword = 'password123';
+            this.users[username].password = newPassword;
+            localStorage.setItem('users', JSON.stringify(this.users));
+            alert(`Password reset to: ${newPassword}`);
+        }
+    }
+
+    deleteUser(username) {
+        if (confirm(`Delete user ${username} and all their data?`)) {
+            delete this.users[username];
+            localStorage.setItem('users', JSON.stringify(this.users));
+            this.renderUsersList();
+            alert(`User ${username} deleted successfully`);
+        }
+    }
+
     showMainApp() {
         document.getElementById('authContainer').classList.add('d-none');
         document.getElementById('mainApp').classList.remove('d-none');
         document.getElementById('currentUser').textContent = this.currentUser;
+        
+        // Show admin button if user is admin
+        if (this.users[this.currentUser]?.isAdmin) {
+            document.getElementById('adminBtn').classList.remove('d-none');
+        } else {
+            document.getElementById('adminBtn').classList.add('d-none');
+        }
         
         if (!window.examTracker) {
             window.examTracker = new ExamTracker();
