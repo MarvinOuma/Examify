@@ -1,12 +1,36 @@
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAZjMd730oqhV0Sp4PUjjgp3PHgnKqY-2A",
+    authDomain: "examifyy.firebaseapp.com",
+    projectId: "examifyy",
+    storageBucket: "examifyy.firebasestorage.app",
+    messagingSenderId: "629676824638",
+    appId: "1:629676824638:web:a51526221a4e89df65996f"
+};
+
+// Initialize Firebase
+try {
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    console.log('Firebase initialized successfully');
+} catch (error) {
+    console.log('Firebase initialization failed, using localStorage only');
+    const db = null;
+}
+
 class AuthManager {
     constructor() {
         this.currentUser = localStorage.getItem('currentUser');
-        this.users = JSON.parse(localStorage.getItem('users')) || {};
+        this.users = {};
+        this.db = db;
         this.initAdmin();
         this.init();
     }
 
-    initAdmin() {
+    async initAdmin() {
+        // Load users from Firebase
+        await this.loadUsers();
+        
         // Create admin account if it doesn't exist
         if (!this.users['admin']) {
             this.users['admin'] = {
@@ -14,6 +38,28 @@ class AuthManager {
                 exams: [],
                 isAdmin: true
             };
+            await this.saveUsers();
+        }
+    }
+
+    async loadUsers() {
+        try {
+            const doc = await this.db.collection('app').doc('users').get();
+            if (doc.exists) {
+                this.users = doc.data().users || {};
+            }
+        } catch (error) {
+            console.log('Loading from localStorage fallback');
+            this.users = JSON.parse(localStorage.getItem('users')) || {};
+        }
+    }
+
+    async saveUsers() {
+        try {
+            await this.db.collection('app').doc('users').set({ users: this.users });
+            localStorage.setItem('users', JSON.stringify(this.users));
+        } catch (error) {
+            console.log('Saving to localStorage fallback');
             localStorage.setItem('users', JSON.stringify(this.users));
         }
     }
@@ -67,10 +113,12 @@ class AuthManager {
         });
     }
 
-    login() {
+    async login() {
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value;
 
+        await this.loadUsers();
+        
         if (this.users[username] && this.users[username].password === password) {
             this.currentUser = username;
             localStorage.setItem('currentUser', username);
@@ -80,7 +128,7 @@ class AuthManager {
         }
     }
 
-    signup() {
+    async signup() {
         const username = document.getElementById('signupUsername').value.trim();
         const password = document.getElementById('signupPassword').value;
 
@@ -89,13 +137,15 @@ class AuthManager {
             return;
         }
 
+        await this.loadUsers();
+        
         if (this.users[username]) {
             alert('Username already exists');
             return;
         }
 
-        this.users[username] = { password, exams: [] };
-        localStorage.setItem('users', JSON.stringify(this.users));
+        this.users[username] = { password, exams: [], groups: [] };
+        await this.saveUsers();
         
         this.currentUser = username;
         localStorage.setItem('currentUser', username);
@@ -172,7 +222,7 @@ class AuthManager {
             this.users[this.currentUser].password = newPassword;
         }
 
-        localStorage.setItem('users', JSON.stringify(this.users));
+        await this.saveUsers();
         document.getElementById('currentUser').textContent = this.currentUser;
         bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
         alert('Settings updated successfully');
@@ -227,19 +277,19 @@ class AuthManager {
             }).join('');
     }
 
-    resetPassword(username) {
+    async resetPassword(username) {
         if (confirm(`Reset password for ${username}?`)) {
             const newPassword = 'password123';
             this.users[username].password = newPassword;
-            localStorage.setItem('users', JSON.stringify(this.users));
+            await this.saveUsers();
             alert(`Password reset to: ${newPassword}`);
         }
     }
 
-    deleteUser(username) {
+    async deleteUser(username) {
         if (confirm(`Delete user ${username} and all their data?`)) {
             delete this.users[username];
-            localStorage.setItem('users', JSON.stringify(this.users));
+            await this.saveUsers();
             this.renderUsersList();
             alert(`User ${username} deleted successfully`);
         }
@@ -278,21 +328,20 @@ class ExamTracker {
         this.init();
     }
 
-    loadUserData() {
-        const users = JSON.parse(localStorage.getItem('users')) || {};
+    async loadUserData() {
+        await authManager.loadUsers();
         const currentUser = localStorage.getItem('currentUser');
-        const userData = users[currentUser] || {};
+        const userData = authManager.users[currentUser] || {};
         this.exams = userData.exams || [];
         this.groups = userData.groups || [];
     }
 
-    saveUserData() {
-        const users = JSON.parse(localStorage.getItem('users')) || {};
+    async saveUserData() {
         const currentUser = localStorage.getItem('currentUser');
-        if (users[currentUser]) {
-            users[currentUser].exams = this.exams;
-            users[currentUser].groups = this.groups;
-            localStorage.setItem('users', JSON.stringify(users));
+        if (authManager.users[currentUser]) {
+            authManager.users[currentUser].exams = this.exams;
+            authManager.users[currentUser].groups = this.groups;
+            await authManager.saveUsers();
         }
     }
 
@@ -362,7 +411,7 @@ class ExamTracker {
 
     }
 
-    addExam() {
+    async addExam() {
         const name = document.getElementById('examName').value.trim();
         const date = document.getElementById('examDate').value;
         const time = document.getElementById('examTime').value;
@@ -385,7 +434,7 @@ class ExamTracker {
         };
 
         this.exams.push(exam);
-        this.saveToStorage();
+        await this.saveToStorage();
         this.render();
         document.getElementById('examForm').reset();
     }
@@ -880,8 +929,8 @@ class ExamTracker {
         return this.exams.filter(exam => exam.date === dateStr && !exam.completed);
     }
 
-    saveToStorage() {
-        this.saveUserData();
+    async saveToStorage() {
+        await this.saveUserData();
     }
 }
 
