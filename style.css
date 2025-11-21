@@ -1,0 +1,392 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    min-height: 100vh;
+}
+
+/* Auth Container */
+#authContainer {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+#authContainer .card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    backdrop-filter: blur(10px);
+}
+
+/* Main App Styling */
+.navbar {
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+}
+
+.container {
+    max-width: 1200px;
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border: none;
+    font-weight: 600;
+}
+
+/* Form Styling */
+.form-control, .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.15);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Button Styling */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1ea080);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #ff5252, #d63031);
+}
+
+.btn-outline-primary {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.btn-outline-primary:hover, .btn-outline-primary.active {
+    background: #ff6b6b;
+    border-color: #ff6b6b;
+}
+
+/* Exam Item Styling */
+.exam-item {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.exam-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.exam-item.completed {
+    opacity: 0.7;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.exam-item.completed .exam-name {
+    text-decoration: line-through;
+}
+
+/* Priority and Days Remaining */
+.days-remaining {
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 25px;
+    color: white;
+    text-align: center;
+    min-width: 120px;
+    font-size: 13px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.days-remaining.urgent {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.days-remaining.soon {
+    background: linear-gradient(135deg, #fd7e14, #e55a00);
+}
+
+.days-remaining.normal {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.days-remaining.overdue {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+}
+
+.priority {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority.high {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    color: #c62828;
+    border: 2px solid #ffcdd2;
+}
+
+.priority.medium {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    color: #ef6c00;
+    border: 2px solid #ffe0b2;
+}
+
+.priority.low {
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    color: #2e7d32;
+    border: 2px solid #c8e6c9;
+}
+
+/* Group Styling */
+.group-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.group-header:hover {
+    background: linear-gradient(135deg, #e9ecef, #dee2e6);
+    transform: translateY(-1px);
+}
+
+/* Calendar Styling */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    background: #dee2e6;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.calendar-day {
+    background: white;
+    min-height: 100px;
+    padding: 8px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
+}
+
+.calendar-day.other-month {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    font-weight: 700;
+}
+
+.calendar-exam {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.calendar-exam:hover {
+    transform: scale(1.05);
+}
+
+.calendar-exam.high {
+    background: linear-gradient(135deg, #ffcdd2, #ffb3ba);
+    color: #c62828;
+}
+
+.calendar-exam.medium {
+    background: linear-gradient(135deg, #ffe0b2, #ffcc80);
+    color: #ef6c00;
+}
+
+.calendar-exam.low {
+    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+    color: #2e7d32;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    color: #6c757d;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+}
+
+.empty-state h3 {
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    border-bottom: 2px solid #f8f9fa;
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-footer {
+    border-top: 2px solid #f8f9fa;
+    border-radius: 0 0 20px 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .exam-item .row {
+        text-align: center;
+    }
+    
+    .exam-item .col-md-3,
+    .exam-item .col-md-2 {
+        margin-bottom: 10px;
+    }
+    
+    .calendar-day {
+        min-height: 80px;
+        padding: 4px;
+    }
+    
+    .calendar-exam {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .navbar-nav {
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .days-remaining {
+        min-width: 100px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+    
+    .priority {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
+    
+    .calendar-day {
+        min-height: 60px;
+        padding: 2px;
+    }
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Loading States */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Focus States for Accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid #ff6b6b;
+    outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #ff5252, #d63031);
+}

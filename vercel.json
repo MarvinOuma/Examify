@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "index.html": {
+      "memory": 128
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
