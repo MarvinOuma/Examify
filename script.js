@@ -8,29 +8,24 @@ const firebaseConfig = {
     appId: "1:629676824638:web:a51526221a4e89df65996f"
 };
 
-// Initialize Firebase
+// Initialize Firebase with error handling
+let db = null;
 try {
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    console.log('Firebase initialized successfully');
+    db = firebase.firestore();
+    console.log('Firebase connected');
 } catch (error) {
-    console.log('Firebase initialization failed, using localStorage only');
-    const db = null;
+    console.log('Firebase failed, using localStorage');
 }
 
 class AuthManager {
     constructor() {
         this.currentUser = localStorage.getItem('currentUser');
         this.users = {};
-        this.db = db;
-        this.initAdmin();
         this.init();
     }
 
     async initAdmin() {
-        // Load users from Firebase
-        await this.loadUsers();
-        
         // Create admin account if it doesn't exist
         if (!this.users['admin']) {
             this.users['admin'] = {
@@ -43,30 +38,50 @@ class AuthManager {
     }
 
     async loadUsers() {
-        try {
-            const doc = await this.db.collection('app').doc('users').get();
-            if (doc.exists) {
-                this.users = doc.data().users || {};
+        // Load from localStorage first
+        this.users = JSON.parse(localStorage.getItem('users')) || {};
+        
+        // Try to load from Firebase
+        if (db) {
+            try {
+                const doc = await db.collection('examify').doc('users').get();
+                if (doc.exists) {
+                    const firebaseData = doc.data();
+                    if (firebaseData.users) {
+                        this.users = firebaseData.users;
+                        localStorage.setItem('users', JSON.stringify(this.users));
+                        console.log('Loaded from Firebase');
+                    }
+                }
+            } catch (error) {
+                console.log('Firebase load failed, using localStorage');
             }
-        } catch (error) {
-            console.log('Loading from localStorage fallback');
-            this.users = JSON.parse(localStorage.getItem('users')) || {};
         }
     }
 
     async saveUsers() {
-        try {
-            await this.db.collection('app').doc('users').set({ users: this.users });
-            localStorage.setItem('users', JSON.stringify(this.users));
-        } catch (error) {
-            console.log('Saving to localStorage fallback');
-            localStorage.setItem('users', JSON.stringify(this.users));
+        // Always save to localStorage first
+        localStorage.setItem('users', JSON.stringify(this.users));
+        
+        // Try to sync to Firebase
+        if (db) {
+            try {
+                await db.collection('examify').doc('users').set({
+                    users: this.users,
+                    lastUpdated: new Date().toISOString()
+                });
+                console.log('Synced to Firebase');
+            } catch (error) {
+                console.log('Firebase sync failed');
+            }
         }
     }
 
     async init() {
-        this.bindAuthEvents();
         await this.loadUsers();
+        await this.initAdmin();
+        this.bindAuthEvents();
+        
         if (this.currentUser && this.users[this.currentUser]) {
             this.showMainApp();
         } else {
@@ -117,7 +132,8 @@ class AuthManager {
     async login() {
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value;
-
+        
+        // Reload users from Firebase
         await this.loadUsers();
         
         if (this.users[username] && this.users[username].password === password) {
@@ -137,7 +153,8 @@ class AuthManager {
             alert('Please fill in all fields');
             return;
         }
-
+        
+        // Reload users to check for conflicts
         await this.loadUsers();
         
         if (this.users[username]) {
