@@ -6,12 +6,14 @@ class AuthManager {
     }
 
     init() {
-        if (this.currentUser) {
+        this.bindAuthEvents();
+        if (this.currentUser && this.users[this.currentUser]) {
             this.showMainApp();
         } else {
+            this.currentUser = null;
+            localStorage.removeItem('currentUser');
             this.showAuth();
         }
-        this.bindAuthEvents();
     }
 
     bindAuthEvents() {
