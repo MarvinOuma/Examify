@@ -64,8 +64,9 @@ class AuthManager {
         }
     }
 
-    init() {
+    async init() {
         this.bindAuthEvents();
+        await this.loadUsers();
         if (this.currentUser && this.users[this.currentUser]) {
             this.showMainApp();
         } else {
@@ -76,14 +77,14 @@ class AuthManager {
     }
 
     bindAuthEvents() {
-        document.getElementById('loginFormElement').addEventListener('submit', (e) => {
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
             e.preventDefault();
-            this.login();
+            await this.login();
         });
 
-        document.getElementById('signupFormElement').addEventListener('submit', (e) => {
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
             e.preventDefault();
-            this.signup();
+            await this.signup();
         });
 
         document.getElementById('showSignup').addEventListener('click', (e) => {
@@ -104,8 +105,8 @@ class AuthManager {
             this.showSettings();
         });
 
-        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-            this.saveSettings();
+        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+            await this.saveSettings();
         });
 
         document.getElementById('adminBtn').addEventListener('click', () => {
