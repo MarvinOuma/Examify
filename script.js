@@ -470,6 +470,48 @@ class ExamTracker {
         });
     }
 
+    getDetailedCountdown(examDate, examTime) {
+        const now = new Date();
+        const examDateTime = new Date(examDate + (examTime ? `T${examTime}` : 'T23:59:59'));
+        const diff = examDateTime - now;
+        
+        if (diff <= 0) {
+            return 'Exam time!';
+        }
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        if (days > 0) {
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        } else if (hours > 0) {
+            return `${hours}h ${minutes}m ${seconds}s`;
+        } else {
+            return `${minutes}m ${seconds}s`;
+        }
+    }
+
+    startCountdownTimer() {
+        if (this.countdownTimer) {
+            clearInterval(this.countdownTimer);
+        }
+        
+        this.countdownTimer = setInterval(() => {
+            this.updateCountdowns();
+        }, 1000);
+    }
+
+    updateCountdowns() {
+        document.querySelectorAll('.live-countdown').forEach(element => {
+            const examDate = element.dataset.date;
+            const examTime = element.dataset.time;
+            const countdown = this.getDetailedCountdown(examDate, examTime);
+            element.textContent = countdown;
+        });
+    }
+
     setSortMode(mode) {
         this.currentSort = mode;
         document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
