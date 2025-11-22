@@ -1,87 +1,28 @@
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyAZjMd730oqhV0Sp4PUjjgp3PHgnKqY-2A",
-    authDomain: "examifyy.firebaseapp.com",
-    projectId: "examifyy",
-    storageBucket: "examifyy.firebasestorage.app",
-    messagingSenderId: "629676824638",
-    appId: "1:629676824638:web:a51526221a4e89df65996f"
-};
-
-// Initialize Firebase with error handling
-let db = null;
-try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    console.log('Firebase connected');
-} catch (error) {
-    console.log('Firebase failed, using localStorage');
-}
-
 class AuthManager {
     constructor() {
         this.currentUser = localStorage.getItem('currentUser');
-        this.users = {};
+        this.users = JSON.parse(localStorage.getItem('users')) || {};
+        this.initAdmin();
         this.init();
     }
 
-    async initAdmin() {
-        // Create admin account if it doesn't exist
+    initAdmin() {
         if (!this.users['admin']) {
             this.users['admin'] = {
                 password: 'admin123',
                 exams: [],
                 isAdmin: true
             };
-            await this.saveUsers();
+            this.saveUsers();
         }
     }
 
-    async loadUsers() {
-        // Load from localStorage first
-        this.users = JSON.parse(localStorage.getItem('users')) || {};
-        
-        // Try to load from Firebase
-        if (db) {
-            try {
-                const doc = await db.collection('examify').doc('users').get();
-                if (doc.exists) {
-                    const firebaseData = doc.data();
-                    if (firebaseData.users) {
-                        this.users = firebaseData.users;
-                        localStorage.setItem('users', JSON.stringify(this.users));
-                        console.log('Loaded from Firebase');
-                    }
-                }
-            } catch (error) {
-                console.log('Firebase load failed, using localStorage');
-            }
-        }
-    }
-
-    async saveUsers() {
-        // Always save to localStorage first
+    saveUsers() {
         localStorage.setItem('users', JSON.stringify(this.users));
-        
-        // Try to sync to Firebase
-        if (db) {
-            try {
-                await db.collection('examify').doc('users').set({
-                    users: this.users,
-                    lastUpdated: new Date().toISOString()
-                });
-                console.log('Synced to Firebase');
-            } catch (error) {
-                console.log('Firebase sync failed');
-            }
-        }
     }
 
-    async init() {
-        await this.loadUsers();
-        await this.initAdmin();
+    init() {
         this.bindAuthEvents();
-        
         if (this.currentUser && this.users[this.currentUser]) {
             this.showMainApp();
         } else {
@@ -92,14 +33,14 @@ class AuthManager {
     }
 
     bindAuthEvents() {
-        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+        document.getElementById('loginFormElement').addEventListener('submit', (e) => {
             e.preventDefault();
-            await this.login();
+            this.login();
         });
 
-        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+        document.getElementById('signupFormElement').addEventListener('submit', (e) => {
             e.preventDefault();
-            await this.signup();
+            this.signup();
         });
 
         document.getElementById('showSignup').addEventListener('click', (e) => {
@@ -120,8 +61,8 @@ class AuthManager {
             this.showSettings();
         });
 
-        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
-            await this.saveSettings();
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+            this.saveSettings();
         });
 
         document.getElementById('adminBtn').addEventListener('click', () => {
@@ -129,12 +70,9 @@ class AuthManager {
         });
     }
 
-    async login() {
+    login() {
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value;
-        
-        // Reload users from Firebase
-        await this.loadUsers();
         
         if (this.users[username] && this.users[username].password === password) {
             this.currentUser = username;
@@ -145,7 +83,7 @@ class AuthManager {
         }
     }
 
-    async signup() {
+    signup() {
         const username = document.getElementById('signupUsername').value.trim();
         const password = document.getElementById('signupPassword').value;
 
@@ -154,16 +92,13 @@ class AuthManager {
             return;
         }
         
-        // Reload users to check for conflicts
-        await this.loadUsers();
-        
         if (this.users[username]) {
             alert('Username already exists');
             return;
         }
 
         this.users[username] = { password, exams: [], groups: [] };
-        await this.saveUsers();
+        this.saveUsers();
         
         this.currentUser = username;
         localStorage.setItem('currentUser', username);
@@ -220,7 +155,6 @@ class AuthManager {
                 alert('Username already exists');
                 return;
             }
-            // Update username
             this.users[newUsername] = this.users[this.currentUser];
             delete this.users[this.currentUser];
             this.currentUser = newUsername;
@@ -236,11 +170,10 @@ class AuthManager {
                 alert('Password cannot be empty');
                 return;
             }
-            // Update password
             this.users[this.currentUser].password = newPassword;
         }
 
-        await this.saveUsers();
+        this.saveUsers();
         document.getElementById('currentUser').textContent = this.currentUser;
         bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
         alert('Settings updated successfully');
@@ -295,19 +228,19 @@ class AuthManager {
             }).join('');
     }
 
-    async resetPassword(username) {
+    resetPassword(username) {
         if (confirm(`Reset password for ${username}?`)) {
             const newPassword = 'password123';
             this.users[username].password = newPassword;
-            await this.saveUsers();
+            this.saveUsers();
             alert(`Password reset to: ${newPassword}`);
         }
     }
 
-    async deleteUser(username) {
+    deleteUser(username) {
         if (confirm(`Delete user ${username} and all their data?`)) {
             delete this.users[username];
-            await this.saveUsers();
+            this.saveUsers();
             this.renderUsersList();
             alert(`User ${username} deleted successfully`);
         }
@@ -318,7 +251,6 @@ class AuthManager {
         document.getElementById('mainApp').classList.remove('d-none');
         document.getElementById('currentUser').textContent = this.currentUser;
         
-        // Show admin button if user is admin
         if (this.users[this.currentUser]?.isAdmin) {
             document.getElementById('adminBtn').classList.remove('d-none');
         } else {
@@ -346,20 +278,19 @@ class ExamTracker {
         this.init();
     }
 
-    async loadUserData() {
-        await authManager.loadUsers();
+    loadUserData() {
         const currentUser = localStorage.getItem('currentUser');
         const userData = authManager.users[currentUser] || {};
         this.exams = userData.exams || [];
         this.groups = userData.groups || [];
     }
 
-    async saveUserData() {
+    saveUserData() {
         const currentUser = localStorage.getItem('currentUser');
         if (authManager.users[currentUser]) {
             authManager.users[currentUser].exams = this.exams;
             authManager.users[currentUser].groups = this.groups;
-            await authManager.saveUsers();
+            authManager.saveUsers();
         }
     }
 
@@ -425,11 +356,9 @@ class ExamTracker {
         document.getElementById('nextMonth').addEventListener('click', () => {
             authManager.changeMonth(1);
         });
-
-
     }
 
-    async addExam() {
+    addExam() {
         const name = document.getElementById('examName').value.trim();
         const date = document.getElementById('examDate').value;
         const time = document.getElementById('examTime').value;
@@ -452,7 +381,7 @@ class ExamTracker {
         };
 
         this.exams.push(exam);
-        await this.saveToStorage();
+        this.saveToStorage();
         this.render();
         document.getElementById('examForm').reset();
     }
@@ -469,7 +398,6 @@ class ExamTracker {
 
     deleteExam(id) {
         this.exams = this.exams.filter(e => e.id !== id);
-        // Remove from groups
         this.groups.forEach(group => {
             group.examIds = group.examIds.filter(examId => examId !== id);
         });
@@ -539,86 +467,6 @@ class ExamTracker {
         return exams;
     }
 
-    render() {
-        const container = document.getElementById('examsList');
-        let filteredExams = this.filterExams([...this.exams]);
-        let sortedExams = this.sortExams(filteredExams);
-
-        if (sortedExams.length === 0) {
-            container.innerHTML = `
-                <div class="card">
-                    <div class="card-body empty-state">
-                        <h3>No exams found</h3>
-                        <p>Add your first exam to get started!</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = sortedExams.map(exam => {
-            const days = this.getDaysRemaining(exam.date);
-            const daysClass = this.getDaysRemainingClass(days);
-            const daysText = this.getDaysRemainingText(days);
-
-            return `
-                <div class="card mb-3 exam-item ${exam.completed ? 'completed' : ''}">
-                    <div class="card-body">
-                        <div class="row align-items-start">
-                            ${this.selectMode ? `<div class="col-auto"><input type="checkbox" class="form-check-input exam-checkbox" data-id="${exam.id}" ${this.selectedExams.has(exam.id) ? 'checked' : ''}></div>` : ''}
-                            <div class="${this.selectMode ? 'col-md-4' : 'col-md-5'}">
-                                <h5 class="exam-name mb-1">${exam.name}</h5>
-                                <div class="text-muted small">
-                                    <div><i class="bi bi-calendar"></i> ${new Date(exam.date).toLocaleDateString()}${exam.time ? ` at ${exam.time}` : ''}</div>
-                                    ${exam.location ? `<div><i class="bi bi-geo-alt"></i> ${exam.location}</div>` : ''}
-                                    ${exam.notes ? `<div class="mt-1"><i class="bi bi-sticky"></i> ${exam.notes}</div>` : ''}
-                                </div>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <span class="days-remaining ${daysClass}">
-                                    ${daysText}
-                                </span>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <span class="priority ${exam.priority}">
-                                    ${exam.priority}
-                                </span>
-                            </div>
-                            <div class="col-md-3 text-end">
-                                ${!this.selectMode ? `
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="examTracker.editExam(${exam.id})">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm ${exam.completed ? 'btn-warning' : 'btn-success'} me-1" onclick="examTracker.toggleComplete(${exam.id})">
-                                        <i class="bi ${exam.completed ? 'bi-arrow-counterclockwise' : 'bi-check'}"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="examTracker.deleteExam(${exam.id})">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        if (this.selectMode) {
-            setTimeout(() => {
-                document.querySelectorAll('.exam-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        const examId = parseInt(e.target.dataset.id);
-                        if (e.target.checked) {
-                            this.selectedExams.add(examId);
-                        } else {
-                            this.selectedExams.delete(examId);
-                        }
-                    });
-                });
-            }, 0);
-        }
-    }
-
     toggleSelectMode() {
         this.selectMode = !this.selectMode;
         this.selectedExams.clear();
@@ -662,8 +510,6 @@ class ExamTracker {
         this.renderGroups();
     }
 
-
-
     editExam(id) {
         const exam = this.exams.find(e => e.id === id);
         if (!exam) return;
@@ -702,6 +548,15 @@ class ExamTracker {
         this.renderGroups();
     }
 
+    toggleGroup(groupId) {
+        if (this.expandedGroups.has(groupId)) {
+            this.expandedGroups.delete(groupId);
+        } else {
+            this.expandedGroups.add(groupId);
+        }
+        this.renderGroups();
+    }
+
     renderGroups() {
         const container = document.getElementById('groupsList');
         
@@ -721,11 +576,11 @@ class ExamTracker {
                         const isExpanded = this.expandedGroups.has(group.id);
                         return `
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center p-2 border rounded bg-light" style="cursor: pointer;" onclick="examTracker.toggleGroup(${group.id})">
+                                <div class="group-header d-flex justify-content-between align-items-center p-3" style="cursor: pointer;" onclick="examTracker.toggleGroup(${group.id})">
                                     <div>
-                                        <i class="bi ${isExpanded ? 'bi-chevron-down' : 'bi-chevron-right'}"></i>
-                                        <strong class="ms-2">${group.name}</strong>
-                                        <small class="text-muted ms-2">(${groupExams.length} exams)</small>
+                                        <i class="bi ${isExpanded ? 'bi-chevron-down' : 'bi-chevron-right'} text-primary"></i>
+                                        <strong class="ms-2 fs-6">${group.name}</strong>
+                                        <span class="badge bg-secondary ms-2">${groupExams.length} exams</span>
                                     </div>
                                     <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); examTracker.deleteGroup(${group.id});">
                                         <i class="bi bi-trash"></i>
@@ -744,15 +599,6 @@ class ExamTracker {
         `;
     }
 
-    toggleGroup(groupId) {
-        if (this.expandedGroups.has(groupId)) {
-            this.expandedGroups.delete(groupId);
-        } else {
-            this.expandedGroups.add(groupId);
-        }
-        this.renderGroups();
-    }
-
     renderGroupExams(groupExams) {
         return groupExams.map(exam => {
             const days = this.getDaysRemaining(exam.date);
@@ -761,14 +607,14 @@ class ExamTracker {
 
             return `
                 <div class="card mb-2 exam-item ${exam.completed ? 'completed' : ''}">
-                    <div class="card-body py-2">
+                    <div class="card-body py-3">
                         <div class="row align-items-start">
                             <div class="col-md-5">
-                                <h6 class="exam-name mb-1">${exam.name}</h6>
+                                <h6 class="exam-name mb-2 fw-bold">${exam.name}</h6>
                                 <div class="text-muted small">
-                                    <div><i class="bi bi-calendar"></i> ${new Date(exam.date).toLocaleDateString()}${exam.time ? ` at ${exam.time}` : ''}</div>
-                                    ${exam.location ? `<div><i class="bi bi-geo-alt"></i> ${exam.location}</div>` : ''}
-                                    ${exam.notes ? `<div class="mt-1"><i class="bi bi-sticky"></i> ${exam.notes}</div>` : ''}
+                                    <div class="mb-1"><i class="bi bi-calendar me-1"></i> ${new Date(exam.date).toLocaleDateString()}${exam.time ? ` at ${exam.time}` : ''}</div>
+                                    ${exam.location ? `<div class="mb-1"><i class="bi bi-geo-alt me-1"></i> ${exam.location}</div>` : ''}
+                                    ${exam.notes ? `<div class="mt-1"><i class="bi bi-sticky me-1"></i> ${exam.notes}</div>` : ''}
                                 </div>
                             </div>
                             <div class="col-md-2 text-center">
@@ -805,87 +651,6 @@ class ExamTracker {
             group.examIds.forEach(id => groupedExamIds.add(id));
         });
         return this.exams.filter(exam => !groupedExamIds.has(exam.id));
-    }
-
-    render() {
-        this.renderGroups();
-        const container = document.getElementById('examsList');
-        let filteredExams = this.filterExams(this.getUngroupedExams());
-        let sortedExams = this.sortExams(filteredExams);
-
-        if (sortedExams.length === 0) {
-            container.innerHTML = `
-                <div class="card">
-                    <div class="card-body empty-state">
-                        <h3>No exams found</h3>
-                        <p>Add your first exam to get started!</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = sortedExams.map(exam => {
-            const days = this.getDaysRemaining(exam.date);
-            const daysClass = this.getDaysRemainingClass(days);
-            const daysText = this.getDaysRemainingText(days);
-
-            return `
-                <div class="card mb-3 exam-item ${exam.completed ? 'completed' : ''}">
-                    <div class="card-body">
-                        <div class="row align-items-start">
-                            ${this.selectMode ? `<div class="col-auto"><input type="checkbox" class="form-check-input exam-checkbox" data-id="${exam.id}" ${this.selectedExams.has(exam.id) ? 'checked' : ''}></div>` : ''}
-                            <div class="${this.selectMode ? 'col-md-4' : 'col-md-5'}">
-                                <h5 class="exam-name mb-1">${exam.name}</h5>
-                                <div class="text-muted small">
-                                    <div><i class="bi bi-calendar"></i> ${new Date(exam.date).toLocaleDateString()}${exam.time ? ` at ${exam.time}` : ''}</div>
-                                    ${exam.location ? `<div><i class="bi bi-geo-alt"></i> ${exam.location}</div>` : ''}
-                                    ${exam.notes ? `<div class="mt-1"><i class="bi bi-sticky"></i> ${exam.notes}</div>` : ''}
-                                </div>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <span class="days-remaining ${daysClass}">
-                                    ${daysText}
-                                </span>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <span class="priority ${exam.priority}">
-                                    ${exam.priority}
-                                </span>
-                            </div>
-                            <div class="col-md-3 text-end">
-                                ${!this.selectMode ? `
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="examTracker.editExam(${exam.id})">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm ${exam.completed ? 'btn-warning' : 'btn-success'} me-1" onclick="examTracker.toggleComplete(${exam.id})">
-                                        <i class="bi ${exam.completed ? 'bi-arrow-counterclockwise' : 'bi-check'}"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="examTracker.deleteExam(${exam.id})">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        if (this.selectMode) {
-            setTimeout(() => {
-                document.querySelectorAll('.exam-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        const examId = parseInt(e.target.dataset.id);
-                        if (e.target.checked) {
-                            this.selectedExams.add(examId);
-                        } else {
-                            this.selectedExams.delete(examId);
-                        }
-                    });
-                });
-            }, 0);
-        }
     }
 
     renderCalendar() {
@@ -947,8 +712,89 @@ class ExamTracker {
         return this.exams.filter(exam => exam.date === dateStr && !exam.completed);
     }
 
-    async saveToStorage() {
-        await this.saveUserData();
+    render() {
+        this.renderGroups();
+        const container = document.getElementById('examsList');
+        let filteredExams = this.filterExams(this.getUngroupedExams());
+        let sortedExams = this.sortExams(filteredExams);
+
+        if (sortedExams.length === 0) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-body empty-state">
+                        <h3>No exams found</h3>
+                        <p>Add your first exam to get started!</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = sortedExams.map(exam => {
+            const days = this.getDaysRemaining(exam.date);
+            const daysClass = this.getDaysRemainingClass(days);
+            const daysText = this.getDaysRemainingText(days);
+
+            return `
+                <div class="card mb-3 exam-item ${exam.completed ? 'completed' : ''} fade-in">
+                    <div class="card-body">
+                        <div class="row align-items-start">
+                            ${this.selectMode ? `<div class="col-auto"><input type="checkbox" class="form-check-input exam-checkbox" data-id="${exam.id}" ${this.selectedExams.has(exam.id) ? 'checked' : ''}></div>` : ''}
+                            <div class="${this.selectMode ? 'col-md-4' : 'col-md-5'}">
+                                <h5 class="exam-name mb-2 fw-bold">${exam.name}</h5>
+                                <div class="text-muted small">
+                                    <div class="mb-1"><i class="bi bi-calendar me-1"></i> ${new Date(exam.date).toLocaleDateString()}${exam.time ? ` at ${exam.time}` : ''}</div>
+                                    ${exam.location ? `<div class="mb-1"><i class="bi bi-geo-alt me-1"></i> ${exam.location}</div>` : ''}
+                                    ${exam.notes ? `<div class="mt-1"><i class="bi bi-sticky me-1"></i> ${exam.notes}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <span class="days-remaining ${daysClass}">
+                                    ${daysText}
+                                </span>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <span class="priority ${exam.priority}">
+                                    ${exam.priority}
+                                </span>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                ${!this.selectMode ? `
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="examTracker.editExam(${exam.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm ${exam.completed ? 'btn-warning' : 'btn-success'} me-1" onclick="examTracker.toggleComplete(${exam.id})">
+                                        <i class="bi ${exam.completed ? 'bi-arrow-counterclockwise' : 'bi-check'}"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="examTracker.deleteExam(${exam.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (this.selectMode) {
+            setTimeout(() => {
+                document.querySelectorAll('.exam-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const examId = parseInt(e.target.dataset.id);
+                        if (e.target.checked) {
+                            this.selectedExams.add(examId);
+                        } else {
+                            this.selectedExams.delete(examId);
+                        }
+                    });
+                });
+            }, 0);
+        }
+    }
+
+    saveToStorage() {
+        this.saveUserData();
     }
 }
 
