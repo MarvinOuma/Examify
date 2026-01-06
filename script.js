@@ -3,13 +3,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
 // Your web app's Firebase configuration
+
 const firebaseConfig = {
-    apiKey: "AIzaSyCm_13L3lVG_wtvNOJXRipCQGPUVtg54NE",
-    authDomain: "login-example-dbb13.firebaseapp.com",
-    projectId: "login-example-dbb13",
-    storageBucket: "login-example-dbb13.firebasestorage.app",
-    messagingSenderId: "111041206024",
-    appId: "1:111041206024:web:3a9bdc5ac126256638bebd"
+    apiKey: "AIzaSyAZjMd730oqhV0Sp4PUjjgp3PHgnKqY-2A",
+    authDomain: "examifyy.firebaseapp.com",
+    projectId: "examifyy",
+    storageBucket: "examifyy.firebasestorage.app",
+    messagingSenderId: "629676824638",
+    appId: "1:629676824638:web:a51526221a4e89df65996f",
+    measurementId: "G-PSNS4PVMKE"
 };
 
 // Initialize Firebase
