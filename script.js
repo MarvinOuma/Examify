@@ -534,46 +534,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const year = this.currentDate.getFullYear();
         const month = this.currentDate.getMonth();
         
-        document.getElementById('currentMonth').textContent = 
-            new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay());
-        
-        const calendar = document.getElementById('calendar');
-        calendar.innerHTML = `
-            <div class="calendar-grid">
-                <div class="text-center fw-bold p-2">Sun</div>
-                <div class="text-center fw-bold p-2">Mon</div>
-                <div class="text-center fw-bold p-2">Tue</div>
-                <div class="text-center fw-bold p-2">Wed</div>
-                <div class="text-center fw-bold p-2">Thu</div>
-                <div class="text-center fw-bold p-2">Fri</div>
-                <div class="text-center fw-bold p-2">Sat</div>
-                ${this.generateCalendarDays(startDate, year, month)}
-            </div>
-        `;
-    }
+        document.getElementById('currentUser').textContent = user.email;
+        }
 
-    generateCalendarDays(startDate, year, month) {
-        let html = '';
-        const today = new Date();
-        const currentDate = new Date(startDate);
-        
-        for (let i = 0; i < 42; i++) {
-            const dayExams = this.getExamsForDate(currentDate);
-            const isCurrentMonth = currentDate.getMonth() === month;
-            const isToday = currentDate.toDateString() === today.toDateString();
-            
-            html += `
-                <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}">
-                    <div class="fw-bold">${currentDate.getDate()}</div>
-                    ${dayExams.map(exam => `
-                        <div class="calendar-exam ${exam.priority}" title="${exam.name}${exam.time ? ' at ' + exam.time : ''}">
-                            ${exam.name.substring(0, 15)}${exam.name.length > 15 ? '...' : ''}
-                        </div>
                     `).join('')}
                 </div>
             `;
