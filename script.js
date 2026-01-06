@@ -1,6 +1,20 @@
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
-const auth = getAuth();
+// Your web app's Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCm_13L3lVG_wtvNOJXRipCQGPUVtg54NE",
+    authDomain: "login-example-dbb13.firebaseapp.com",
+    projectId: "login-example-dbb13",
+    storageBucket: "login-example-dbb13.firebasestorage.app",
+    messagingSenderId: "111041206024",
+    appId: "1:111041206024:web:3a9bdc5ac126256638bebd"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 function bindAuthEvents() {
     document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
