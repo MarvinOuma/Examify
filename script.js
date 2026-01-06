@@ -56,41 +56,41 @@ function bindAuthEvents() {
     });
 
     document.getElementById('settingsBtn').addEventListener('click', () => {
+        // ...existing code for settings button...
+    });
+}
 
-        function toggleAuthForm(type) {
-            if (type === 'signup') {
-                document.getElementById('loginForm').classList.add('d-none');
-                document.getElementById('signupForm').classList.remove('d-none');
-            } else {
-                document.getElementById('signupForm').classList.add('d-none');
-                document.getElementById('loginForm').classList.remove('d-none');
-            }
-        }
-
-        function showAuth() {
-            document.getElementById('authContainer').classList.remove('d-none');
-            document.getElementById('mainApp').classList.add('d-none');
-        }
-
-        function showMainApp(user) {
-            document.getElementById('authContainer').classList.add('d-none');
-            document.getElementById('mainApp').classList.remove('d-none');
-            document.getElementById('currentUser').textContent = user.email;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            bindAuthEvents();
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    showMainApp(user);
-                } else {
-                    showAuth();
-                }
-            });
-        });
-// ...existing code...
-// ...existing code...
+function toggleAuthForm(type) {
+    if (type === 'signup') {
+        document.getElementById('loginForm').classList.add('d-none');
+        document.getElementById('signupForm').classList.remove('d-none');
+    } else {
+        document.getElementById('signupForm').classList.add('d-none');
+        document.getElementById('loginForm').classList.remove('d-none');
     }
+}
+
+function showAuth() {
+    document.getElementById('authContainer').classList.remove('d-none');
+    document.getElementById('mainApp').classList.add('d-none');
+}
+
+function showMainApp(user) {
+    document.getElementById('authContainer').classList.add('d-none');
+    document.getElementById('mainApp').classList.remove('d-none');
+    document.getElementById('currentUser').textContent = user.email;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    bindAuthEvents();
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            showMainApp(user);
+        } else {
+            showAuth();
+        }
+    });
+});
 
     bindEvents() {
         document.getElementById('examForm').addEventListener('submit', (e) => {
