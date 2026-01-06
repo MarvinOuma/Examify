@@ -709,5 +709,4 @@ function bindAuthEvents() {
     }
 }
 
-// Initialize the app
-const authManager = new AuthManager();
+// ...existing code...
