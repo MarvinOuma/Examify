@@ -83,6 +83,7 @@ function showMainApp(user) {
 
 document.addEventListener('DOMContentLoaded', () => {
     bindAuthEvents();
+    bindExamEvents();
     onAuthStateChanged(auth, (user) => {
         if (user) {
             showMainApp(user);
