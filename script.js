@@ -89,35 +89,7 @@ function bindAuthEvents() {
             });
         });
 // ...existing code...
-        this.selectMode = false;
-        this.selectedExams = new Set();
-        this.editingExam = null;
-        this.expandedGroups = new Set();
-        this.currentDate = new Date();
-        this.countdownTimer = null;
-        this.loadUserData();
-        this.init();
-    }
-
-    loadUserData() {
-        const currentUser = localStorage.getItem('currentUser');
-        const userData = authManager.users[currentUser] || {};
-        this.exams = userData.exams || [];
-        this.groups = userData.groups || [];
-    }
-
-    saveUserData() {
-        const currentUser = localStorage.getItem('currentUser');
-        if (authManager.users[currentUser]) {
-            authManager.users[currentUser].exams = this.exams;
-            authManager.users[currentUser].groups = this.groups;
-            authManager.saveUsers();
-        }
-    }
-
-    init() {
-        this.bindEvents();
-        this.render();
+// ...existing code...
     }
 
     bindEvents() {
