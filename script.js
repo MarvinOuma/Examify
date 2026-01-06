@@ -1,124 +1,77 @@
-class AuthManager {
-    constructor() {
-        this.currentUser = localStorage.getItem('currentUser');
-        this.users = JSON.parse(localStorage.getItem('users')) || {};
-        this.initAdmin();
-        this.init();
-    }
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
-    initAdmin() {
-        if (!this.users['admin']) {
-            this.users['admin'] = {
-                password: 'admin123',
-                exams: [],
-                isAdmin: true
-            };
-            this.saveUsers();
-        }
-    }
+const auth = getAuth();
 
-    saveUsers() {
-        localStorage.setItem('users', JSON.stringify(this.users));
-    }
-
-    init() {
-        this.bindAuthEvents();
-        if (this.currentUser && this.users[this.currentUser]) {
-            this.showMainApp();
-        } else {
-            this.currentUser = null;
-            localStorage.removeItem('currentUser');
-            this.showAuth();
-        }
-    }
-
-    bindAuthEvents() {
-        document.getElementById('loginFormElement').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.login();
-        });
-
-        document.getElementById('signupFormElement').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.signup();
-        });
-
-        document.getElementById('showSignup').addEventListener('click', (e) => {
-            e.preventDefault();
-            this.toggleAuthForm('signup');
-        });
-
-        document.getElementById('showLogin').addEventListener('click', (e) => {
-            e.preventDefault();
-            this.toggleAuthForm('login');
-        });
-
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.logout();
-        });
-
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            this.showSettings();
-        });
-
-        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-            this.saveSettings();
-        });
-
-        document.getElementById('adminBtn').addEventListener('click', () => {
-            this.showAdmin();
-        });
-    }
-
-    login() {
-        const username = document.getElementById('loginUsername').value.trim();
+function bindAuthEvents() {
+    document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        
-        if (this.users[username] && this.users[username].password === password) {
-            this.currentUser = username;
-            localStorage.setItem('currentUser', username);
-            this.showMainApp();
-        } else {
-            alert('Invalid username or password');
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            alert(error.message);
         }
-    }
+    });
 
-    signup() {
-        const username = document.getElementById('signupUsername').value.trim();
+    document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('signupUsername').value;
         const password = document.getElementById('signupPassword').value;
-
-        if (!username || !password) {
-            alert('Please fill in all fields');
-            return;
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            alert(error.message);
         }
-        
-        if (this.users[username]) {
-            alert('Username already exists');
-            return;
+    });
+
+    document.getElementById('showSignup').addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleAuthForm('signup');
+    });
+
+    document.getElementById('showLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleAuthForm('login');
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await signOut(auth);
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+
+        function toggleAuthForm(type) {
+            if (type === 'signup') {
+                document.getElementById('loginForm').classList.add('d-none');
+                document.getElementById('signupForm').classList.remove('d-none');
+            } else {
+                document.getElementById('signupForm').classList.add('d-none');
+                document.getElementById('loginForm').classList.remove('d-none');
+            }
         }
 
-        this.users[username] = { password, exams: [], groups: [] };
-        this.saveUsers();
-        
-        this.currentUser = username;
-        localStorage.setItem('currentUser', username);
-        this.showMainApp();
-    }
-
-    logout() {
-        this.currentUser = null;
-        localStorage.removeItem('currentUser');
-        this.showAuth();
-    }
-
-    toggleAuthForm(form) {
-        if (form === 'signup') {
-            document.getElementById('loginForm').classList.add('d-none');
-            document.getElementById('signupForm').classList.remove('d-none');
-        } else {
-            document.getElementById('signupForm').classList.add('d-none');
-            document.getElementById('loginForm').classList.remove('d-none');
+        function showAuth() {
+            document.getElementById('authContainer').classList.remove('d-none');
+            document.getElementById('mainApp').classList.add('d-none');
         }
+
+        function showMainApp(user) {
+            document.getElementById('authContainer').classList.add('d-none');
+            document.getElementById('mainApp').classList.remove('d-none');
+            document.getElementById('currentUser').textContent = user.email;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bindAuthEvents();
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    showMainApp(user);
+                } else {
+                    showAuth();
+                }
+            });
+        });
     }
 
     showAuth() {
